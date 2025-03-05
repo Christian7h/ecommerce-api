@@ -1,0 +1,26 @@
+---
+// src/pages/category/[id].astro
+import Layout from '../../layouts/Layout.astro';
+import ProductList from '../../components/ProductList.tsx';
+
+const { id } = Astro.params; // Capturamos el ID de la categoría
+const token = Astro.cookies.get("token")?.value;
+if (!token) return Astro.redirect("/login");
+
+let products = [];
+try {
+  const response = await fetch(`https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/products/category/${id}`, {
+    headers: { "Authorization": `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Error al obtener productos");
+  products = await response.json();
+} catch (error) {
+  console.error(error);
+}
+---
+
+<Layout title={`Categoría ${id}`}>
+  <h1>Productos en la Categoría {id}</h1>
+  <ProductList client:only="react" products={products} />
+  <a href="/">Volver a Todos los Productos</a>
+</Layout>

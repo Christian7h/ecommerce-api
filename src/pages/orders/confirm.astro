@@ -1,0 +1,17 @@
+---
+// src/pages/orders/confirm.astro
+import Layout from '../../layouts/Layout.astro';
+import ConfirmPayment from '../../components/ConfirmPayment.tsx';
+
+const token = Astro.cookies.get("token")?.value;
+if (!token) return Astro.redirect("/login");
+
+const tokenWs = new URL(Astro.request.url).searchParams.get('token_ws');
+
+---
+
+<Layout title="Confirmación de Pago">
+  <h1>Confirmación de Pago</h1>
+  <ConfirmPayment tokenWs={tokenWs} token={token} client:only="react" />
+  <a href="/pedidos">Ver Mis Órdenes</a>
+</Layout>

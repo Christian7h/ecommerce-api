@@ -1,11 +1,44 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import Inicio from '../components/Inicio.tsx';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const token = Astro.cookies.get("token")?.value;
+if (!token) return Astro.redirect("/login");
+
+let products = [];
+try {
+  const response = await fetch(`https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/products`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Error al obtener productos");
+  products = await response.json();
+} catch (error) {
+  console.error(error);
+}
+
+let categories = [];
+try {
+  const response = await fetch(`https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/categories`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Error al obtener categorias");
+  categories = await response.json();
+} catch (error) {
+  console.error(error);
+}
+
+let total = 0;
+try {
+  const res = await fetch("https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/cart/total", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Error al obtener el total del carrito");
+  total = await res.json();
+} catch (error) {
+  console.error(error);
+}
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Tienda">
+  <Inicio products={products} categories={categories} total={total} client:only="react" />
 </Layout>

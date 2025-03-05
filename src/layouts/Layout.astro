@@ -1,22 +1,42 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+---
+// src/layouts/Layout.astro
+const { title } = Astro.props; // Propiedad 'title' para personalizar el título
+import '../styles/global.css'
+import { ClientRouter } from 'astro:transitions';
+---
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+	<ClientRouter/>
+  </head>
+  <body>
+    <!-- Barra de Navegación -->
+    <header>
+      <nav>
+        <!-- Enlace a las categorías -->
+        <ul class="navbar">
+          <li><a href="/">Inicio</a></li>
+          <li><a href="/carrito">Carrito</a></li>
+          <li><a href="/pedidos">Mis Órdenes</a></li>
+          <li><a href="/categorias">Categorías</a></li> <!-- Enlace a las categorías -->
+        </ul>
+      </nav>
+    </header>
+
+    <!-- Contenido Principal (cambia dependiendo de la página) -->
+    <main>
+      <slot /> <!-- Aquí se inserta el contenido dinámico de las páginas -->
+    </main>
+
+    <!-- Footer (opcional) -->
+    <footer>
+      <p>&copy; 2025 Tienda Online</p>
+    </footer>
+  </body>
+</html>
