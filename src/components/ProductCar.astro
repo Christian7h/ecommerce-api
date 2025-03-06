@@ -1,0 +1,75 @@
+---
+const { _id, name, price, description } = Astro.props;
+const token = Astro.cookies.get("token")?.value;
+if (!token) return Astro.redirect("/login");
+
+let message = "";
+
+// Función para añadir al carrito
+const handleAddToCart = async (productId) => {
+  try {
+    const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/cart/add`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ product: productId, quantity: 1 }),
+    });
+
+    if (response.ok) {
+      message = "Producto añadido al carrito";
+    } else {
+      message = "Error al añadir al carrito";
+    }
+  } catch (error) {
+    message = "Hubo un problema al añadir el producto al carrito";
+  }
+}
+---
+
+<div class="bg-white shadow-lg rounded-lg p-4 border">
+  <h3 class="text-lg font-semibold">{name}</h3>
+  <p class="text-sm text-gray-600">{description}</p>
+  <p class="text-lg font-bold text-blue-500">${price}</p>
+
+  <button
+    id={`addToCartButton-${_id}`}
+    class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-all"
+    data-product-id={_id} 
+  >
+    Añadir al Carrito
+  </button>
+
+  {message && <p class="text-sm text-red-500 mt-2">{message}</p>}
+
+  <script type="module">
+    // Escuchar el evento click para cada botón de añadir al carrito
+    document.getElementById(`addToCartButton-${{ _id }}`)?.addEventListener("click", (event) => {
+      const productId = event.target.getAttribute("data-product-id");
+      handleAddToCart(productId);
+    });
+
+    async function handleAddToCart(productId) {
+      try {
+        const token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+        const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/cart/add`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ product: productId, quantity: 1 }),
+        });
+
+        if (response.ok) {
+          alert("Producto añadido al carrito");
+        } else {
+          alert("Error al añadir al carrito");
+        }
+      } catch (error) {
+        console.error("Hubo un problema al añadir el producto al carrito");
+      }
+    }
+  </script>
+</div>

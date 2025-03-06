@@ -1,12 +1,30 @@
 ---
 // src/pages/category/[id].astro
-import Layout from '../../layouts/Layout.astro';
-import ProductList from '../../components/ProductList.tsx';
+import "../../styles/global.css";
+import { App } from "../../App";
 
-const { id } = Astro.params; // Capturamos el ID de la categoría
+// Obtener el token desde las cookies
 const token = Astro.cookies.get("token")?.value;
 if (!token) return Astro.redirect("/login");
 
+// Obtener el ID de la categoría de los parámetros
+const { id } = Astro.params;
+
+// Obtener información de la categoría
+let categoryName = "";
+try {
+  const categoryResponse = await fetch(`${import.meta.env.PUBLIC_API_URL}/categories/${id}`, {
+    headers: { "Authorization": `Bearer ${token}` },
+  });
+  if (categoryResponse.ok) {
+    const categoryData = await categoryResponse.json();
+    categoryName = categoryData.name;
+  }
+} catch (error) {
+  console.error("Error al obtener información de la categoría:", error);
+}
+
+// Obtener productos de la categoría
 let products = [];
 try {
   const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/products/category/${id}`, {
@@ -19,8 +37,15 @@ try {
 }
 ---
 
-<Layout title={`Categoría ${id}`}>
-  <h1>Productos en la Categoría {id}</h1>
-  <ProductList client:only="react" products={products} />
-  <a href="/">Volver a Todos los Productos</a>
-</Layout>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Categoría {categoryName || id} - E-Commerce</title>
+  </head>
+  <body>
+    <App page="category" data={products} id={id} client:only="react" />
+  </body>
+</html>

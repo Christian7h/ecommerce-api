@@ -1,23 +1,34 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Cart from '../components/Cart.tsx';
+import "../styles/global.css";
+import { App } from "../App";
 
+// Obtener el token desde las cookies
 const token = Astro.cookies.get("token")?.value;
 if (!token) return Astro.redirect("/login");
 
+// Precargar datos del carrito
 let cart = { items: [] };
 try {
   const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/cart`, {
     headers: { "Authorization": `Bearer ${token}` },
   });
-  if (!response.ok) throw new Error("Error al obtener carrito");
-  cart = await response.json();
+  if (response.ok) {
+    cart = await response.json();
+  }
 } catch (error) {
   console.error(error);
 }
-
 ---
 
-<Layout title="Carrito">
-  <Cart cart={cart} client:only="react" />
-</Layout>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Carrito - E-Commerce</title>
+  </head>
+  <body>
+    <App page="cart" data={cart} client:only="react" />
+  </body>
+</html>

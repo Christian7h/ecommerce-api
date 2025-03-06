@@ -1,0 +1,21 @@
+---
+const { text, onClick, className = '' } = Astro.props;
+---
+
+<button
+  id="addToCartButton"
+  class={`mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-all ${className}`}
+>
+  {text}
+</button>
+
+<script type="module">
+  // Seleccionamos el botón después de que se haya renderizado
+  document.getElementById("addToCartButton")?.addEventListener("click", (event) => {
+    // Llamamos a la función onClick cuando se haga clic
+    const onClickFunction = event.target.getAttribute("data-onclick");
+    if (onClickFunction && window[onClickFunction]) {
+      window[onClickFunction]();
+    }
+  });
+</script>

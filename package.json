@@ -15,6 +15,7 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "astro": "^5.4.2",
+    "dotenv": "^16.4.7",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.477.0",
     "react": "^19.0.0",

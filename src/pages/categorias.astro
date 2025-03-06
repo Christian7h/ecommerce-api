@@ -1,22 +1,22 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import CategoryList from '../components/CategoryList.tsx';
+import "../styles/global.css";
+import { App } from "../App";
 
+// Obtener el token desde las cookies
 const token = Astro.cookies.get("token")?.value;
 if (!token) return Astro.redirect("/login");
-
-let categories = [];
-try {
-  const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/categories`, {
-    headers: { "Authorization": `Bearer ${token}` },
-  });
-  if (!response.ok) throw new Error("Error al obtener categorias");
-  categories = await response.json();
-} catch (error) {
-  console.error(error);
-}
 ---
-<Layout title="Categorias"> 
-    <CategoryList categories={categories} client:only="react" />
-</Layout>
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Categorías - E-Commerce</title>
+  </head>
+  <body>
+    <App page="categories" client:only="react" />
+  </body>
+</html>
 

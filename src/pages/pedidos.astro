@@ -1,22 +1,33 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import Orders from '../components/Orders.tsx';
+import "../styles/global.css";
+import { App } from "../App";
 
+// Obtener el token desde las cookies
 const token = Astro.cookies.get("token")?.value;
 if (!token) return Astro.redirect("/login");
 
+// Obtener pedidos desde la API
 let orders = [];
 try {
   const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/orders`, {
     headers: { "Authorization": `Bearer ${token}` },
   });
-  if (!response.ok) throw new Error("Error al obtener órdenes");
+  if (!response.ok) throw new Error("Error al obtener pedidos");
   orders = await response.json();
 } catch (error) {
   console.error(error);
 }
 ---
 
-<Layout title="Mis Órdenes">
-  <Orders orders={orders} client:only="react" />
-</Layout>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Mis Pedidos - E-Commerce</title>
+  </head>
+  <body>
+    <App page="orders" data={orders} client:only="react" />
+  </body>
+</html>

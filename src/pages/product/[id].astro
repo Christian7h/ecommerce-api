@@ -1,5 +1,4 @@
 ---
-// src/pages/orders/confirm.astro
 import "../../styles/global.css";
 import { App } from "../../App";
 
@@ -7,9 +6,8 @@ import { App } from "../../App";
 const token = Astro.cookies.get("token")?.value;
 if (!token) return Astro.redirect("/login");
 
-// Obtener el token de WebPay
-const tokenWs = new URL(Astro.request.url).searchParams.get('token_ws');
-
+// Obtener el ID del producto de los parámetros
+const { id } = Astro.params;
 ---
 
 <html lang="es">
@@ -18,9 +16,9 @@ const tokenWs = new URL(Astro.request.url).searchParams.get('token_ws');
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <title>Confirmación de Pago - E-Commerce</title>
+    <title>Detalle de Producto - E-Commerce</title>
   </head>
   <body>
-    <App page="confirm-payment" tokenWs={tokenWs} client:only="react" />
+    <App page="product" id={id} client:only="react" />
   </body>
 </html>
