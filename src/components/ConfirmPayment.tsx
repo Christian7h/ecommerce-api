@@ -20,7 +20,7 @@ const ConfirmPayment: React.FC<ConfirmPaymentProps> = ({ tokenWs, token }) => {
     const confirmPayment = async () => {
       if (tokenWs) {
         try {
-          const response = await fetch("https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/orders/confirm", {
+          const response = await fetch("https://backend-api-nodejs-todo-api.onrender.com/api/orders/confirm", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
