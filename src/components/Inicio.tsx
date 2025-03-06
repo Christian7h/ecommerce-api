@@ -18,36 +18,44 @@ interface Category {
 
 interface InicioProps {
   products: Product[];
-  categories: Category[]; // Añadido para aceptar las categorías
+  categories: Category[];
   total: number;
 }
 
 const Inicio: React.FC<InicioProps> = ({ products, categories, total: initialTotal }) => {
   const [total, setTotal] = useState(initialTotal);
 
+  const fetchCartTotal = async () => {
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
+
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/cart/total`, {	
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Error al obtener el total del carrito");
+
+      const data = await res.json();
+      setTotal(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // Se ejecuta al cargar el componente
   useEffect(() => {
-    const fetchCartTotal = async () => {
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("token="))
-        ?.split("=")[1];
-
-      if (!token) return;
-
-      try {
-        const res = await fetch(`${import.meta.env.PUBLIC_API_URL}/cart/total`, {	
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Error al obtener el total del carrito");
-        setTotal(await res.json());
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    const pollingInterval = setInterval(fetchCartTotal, 3000);
-    return () => clearInterval(pollingInterval);
+    fetchCartTotal();
   }, []);
+
+  // Función que se pasa a `ProductList` y `CategoryList` para actualizar el total cuando haya cambios
+  const updateCartTotal = () => {
+    fetchCartTotal();
+  };
 
   const handleLogout = () => {
     document.cookie = "token=; Max-Age=0; path=/";
@@ -58,11 +66,9 @@ const Inicio: React.FC<InicioProps> = ({ products, categories, total: initialTot
     <>
       <h1>Productos</h1>
       <a href="/carrito">Ver Carrito</a> | <a href="/pedidos">Mis Órdenes</a>
-      
-      {/* Mostrar lista de productos */}
-      <ProductList products={products} />
-      
-      {/* Mostrar lista de categorías */}
+
+      {/* Pasar `updateCartTotal` para actualizar el carrito en tiempo real */}
+      <ProductList products={products} updateCartTotal={updateCartTotal} />
       <CategoryList categories={categories} />
 
       <p>Cantidad de productos en carrito: <span>{total}</span></p>

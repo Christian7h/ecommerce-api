@@ -35,7 +35,7 @@ const Login = () => {
       const data = await response.json();
       
       // Guardamos el token en cookies con js-cookie
-      Cookies.set("token", data.token, { expires: 1, path: "/" }); // Expira en 1 día
+      Cookies.set("token", data.token, { expires: 7, path: "/" }); // Expira en 1 día
 
       // Redirigir a la página principal
       window.location.href = "/";

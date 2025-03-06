@@ -1,4 +1,3 @@
-// src/components/ProductList.tsx
 import React from "react";
 
 interface Product {
@@ -10,9 +9,10 @@ interface Product {
 
 interface ProductListProps {
   products: Product[];
+  updateCartTotal: () => void; // ✅ Agregamos la función para actualizar el carrito
 }
 
-const ProductList: React.FC<ProductListProps> = ({ products }) => {
+const ProductList: React.FC<ProductListProps> = ({ products, updateCartTotal }) => {
   const token = document.cookie
     .split("; ")
     .find((row) => row.startsWith("token="))
@@ -31,6 +31,7 @@ const ProductList: React.FC<ProductListProps> = ({ products }) => {
 
       if (response.ok) {
         alert("Producto añadido al carrito");
+        updateCartTotal();
       } else {
         alert("Error al añadir al carrito");
       }
@@ -43,8 +44,7 @@ const ProductList: React.FC<ProductListProps> = ({ products }) => {
     <ul>
       {products.map((product) => (
         <li key={product._id}>
-          <strong>{product.name}</strong>: {product.description} - $
-          {product.price}
+          <strong>{product.name}</strong>: {product.description} - ${product.price}
           <button onClick={() => handleAddToCart(product._id)}>
             Añadir al Carrito
           </button>
