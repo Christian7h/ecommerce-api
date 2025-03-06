@@ -13,9 +13,8 @@ const Register = () => {
     setError(null); // Reiniciar error antes de la petición
 
     try {
-      console.log("AUTH_URL:", AUTH_URL); // Debug URL
 
-      const response = await fetch(`https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/auth/register`, {
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

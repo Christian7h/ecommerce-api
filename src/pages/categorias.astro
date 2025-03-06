@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CategoryList from '../components/CategoryList.tsx';
+
+const token = Astro.cookies.get("token")?.value;
+if (!token) return Astro.redirect("/login");
+
+let categories = [];
+try {
+  const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/categories`, {
+    headers: { "Authorization": `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Error al obtener categorias");
+  categories = await response.json();
+} catch (error) {
+  console.error(error);
+}
+---
+<Layout title="Categorias"> 
+    <CategoryList categories={categories} client:only="react" />
+</Layout>
+
