@@ -20,7 +20,7 @@ const ProductList: React.FC<ProductListProps> = ({ products }) => {
 
   const handleAddToCart = async (productId: string) => {
     try {
-      const response = await fetch("https://backend-api-nodejs-todo-api.onrender.com/api/cart/add", {
+      const response = await fetch("https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/cart/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

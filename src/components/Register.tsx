@@ -15,7 +15,7 @@ const Register = () => {
     try {
       console.log("AUTH_URL:", AUTH_URL); // Debug URL
 
-      const response = await fetch(`https://backend-api-nodejs-todo-api.onrender.com/api/auth/register`, {
+      const response = await fetch(`https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

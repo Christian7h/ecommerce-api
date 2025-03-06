@@ -35,7 +35,7 @@ const Inicio: React.FC<InicioProps> = ({ products, categories, total: initialTot
       if (!token) return;
 
       try {
-        const res = await fetch("https://backend-api-nodejs-todo-api.onrender.com/api/cart/total", {
+        const res = await fetch("https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/cart/total", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Error al obtener el total del carrito");

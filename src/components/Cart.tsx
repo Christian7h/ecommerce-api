@@ -21,7 +21,7 @@ interface CartItem {
         ?.split("=")[1];
   
       try {
-        const response = await fetch(`https://backend-api-nodejs-todo-api.onrender.com/api/cart/remove/${productId}`, {
+        const response = await fetch(`https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/cart/remove/${productId}`, {
           method: "DELETE",
           headers: { "Authorization": `Bearer ${token}` },
         });
@@ -43,7 +43,7 @@ interface CartItem {
         ?.split("=")[1];
   
       try {
-        const response = await fetch("https://backend-api-nodejs-todo-api.onrender.com/api/orders/initiate", {
+        const response = await fetch("https://nodejs-todo-api-e6206be79a01.herokuapp.com/api/orders/initiate", {
           method: "POST",
           headers: { "Authorization": `Bearer ${token}` },
         });
