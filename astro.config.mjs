@@ -1,29 +1,20 @@
 // @ts-check
 import { defineConfig, envField } from 'astro/config';
+
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 
-// import netlify from '@astrojs/netlify';
-
-import node from '@astrojs/node';
+import netlify from '@astrojs/netlify';
 
 // https://astro.build/config
 export default defineConfig({
   output:'server',
 
   vite: {
-    plugins: [tailwindcss()],
-    server: {
-      allowedHosts: ['https://ecommerce-api-production-ef05.up.railway.app'],
-    },
+    plugins: [tailwindcss()]
   },
   integrations: [react()],
-  adapter: node({
-    mode: 'standalone'
-  }),
-  server: {
-    host: '0.0.0.0'
-  },
+  adapter: netlify(),
   prefetch: {
     defaultStrategy: 'viewport'
   },
@@ -31,6 +22,5 @@ export default defineConfig({
     schema: {
       PUBLIC_API_URL: envField.string({ context: "client", access: "public", optional: true }),
     }
-  },
-  
+  }
 });
