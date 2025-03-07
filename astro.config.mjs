@@ -14,7 +14,7 @@ export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
     server: {
-      allowedHosts: ['ecommerce-api-production-ef05.up.railway.app'],
+      allowedHosts: ['https://ecommerce-api-production-ef05.up.railway.app'],
     },
   },
   integrations: [react()],
