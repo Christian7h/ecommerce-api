@@ -9,6 +9,7 @@ if (!token) return Astro.redirect("/login");
 
 // Obtener el token de WebPay
 const tokenWs = new URL(Astro.request.url).searchParams.get('token_ws');
+export const prerender = false
 
 ---
 

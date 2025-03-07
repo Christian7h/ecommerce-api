@@ -8,6 +8,22 @@ if (!token) return Astro.redirect("/login");
 
 // Obtener el ID del producto de los parámetros
 const { id } = Astro.params;
+
+// Precargar datos del producto
+let product = {};
+try {
+  const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/product/${id}`, {
+    headers: { "Authorization": `Bearer ${token}` },
+  });
+  if (response.ok) {
+    product = await response.json();
+  }
+} catch (error) {
+  console.error(error);
+}
+
+export const prerender = false
+
 ---
 
 <html lang="es">
