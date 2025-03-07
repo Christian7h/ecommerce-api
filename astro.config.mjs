@@ -4,7 +4,9 @@ import { defineConfig, envField } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 
-import netlify from '@astrojs/netlify';
+// import netlify from '@astrojs/netlify';
+
+import node from '@astrojs/node';
 
 // https://astro.build/config
 export default defineConfig({
@@ -14,7 +16,12 @@ export default defineConfig({
     plugins: [tailwindcss()]
   },
   integrations: [react()],
-  adapter: netlify(),
+  adapter: node({
+    mode: 'standalone'
+  }),
+  server: {
+    host: '0.0.0.0'
+  },
   prefetch: {
     defaultStrategy: 'viewport'
   },
