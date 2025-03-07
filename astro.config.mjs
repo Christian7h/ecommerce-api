@@ -13,7 +13,11 @@ export default defineConfig({
   output:'server',
 
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    server: {
+      allowedHosts: ['ecommerce-api-production-ef05.up.railway.app'],
+    },
+
   },
   integrations: [react()],
   adapter: node({
@@ -29,5 +33,6 @@ export default defineConfig({
     schema: {
       PUBLIC_API_URL: envField.string({ context: "client", access: "public", optional: true }),
     }
-  }
+  },
+  
 });
