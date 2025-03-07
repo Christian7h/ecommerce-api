@@ -1,6 +1,5 @@
 // @ts-check
 import { defineConfig, envField } from 'astro/config';
-
 import tailwindcss from '@tailwindcss/vite';
 import react from '@astrojs/react';
 
@@ -17,8 +16,12 @@ export default defineConfig({
     server: {
       allowedHosts: ['ecommerce-api-production-ef05.up.railway.app'],
     },
-
+    esbuild: {
+      // ESBuild options if needed
+      logOverride: { 'this-is-error': 'silent' },
+    },
   },
+  
   integrations: [react()],
   adapter: node({
     mode: 'standalone'
