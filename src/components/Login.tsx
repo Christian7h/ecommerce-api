@@ -1,154 +1,179 @@
-import { useState } from "react";
+import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import Cookies from "js-cookie"; // Importamos js-cookie
 
-const Login = () => {
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+interface LoginResponse {
+  token: string;
+  role: string;
+  message?: string;
+}
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+const Login: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-    setError(null);
-    setIsLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
     try {
       const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email, password }),
       });
 
-      const contentType = response.headers.get("content-type");
+      const data: LoginResponse = await response.json();
 
       if (!response.ok) {
-        if (contentType && contentType.includes("application/json")) {
-          const data = await response.json();
-          setError(data.message || "Error al iniciar sesión");
-        } else {
-          setError("Error inesperado. El servidor no devolvió un JSON válido.");
-        }
-        setIsLoading(false);
-        return;
+        throw new Error(data.message || 'Error al iniciar sesión');
       }
 
-      const data = await response.json();
-      
-      // Guardamos el token en cookies con js-cookie
+      // Guardar el token en una cookie
       Cookies.set("token", data.token, { expires: 7, path: "/" }); // Expira en 7 días
       
-      // Guardar información del usuario en localStorage
-      const username = email.split('@')[0]; // Usar la parte del email antes del @ como nombre de usuario
+      // Guardar datos del usuario en localStorage
+      const tokenPayload = JSON.parse(atob(data.token.split('.')[1]));
       localStorage.setItem('user_data', JSON.stringify({
-        email,
-        username,
-        userId: data.userId || '',
-        lastLogin: new Date().toISOString()
+        username: tokenPayload.name || email.split('@')[0],
+        role: data.role
       }));
 
-      // Redirigir a la página principal
-      window.location.href = "/";
-    } catch (err) {
-      console.error("Error en la petición:", err);
-      setError("Error de conexión. Verifica tu red.");
+      // Redirigir según el rol
+      if (data.role === 'admin') {
+        window.location.href = '/admin/dashboard';
+      } else {
+        window.location.href = '/';
+      }
+
+    } catch (error) {
+      console.error('Error:', error);
+      setError(error instanceof Error ? error.message : 'Error al iniciar sesión');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden p-8">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Iniciar Sesión</h1>
-            <p className="mt-2 text-sm text-gray-600">Accede a tu cuenta para gestionar tus compras</p>
-          </div>
-
-          {error && <p className="bg-red-50 text-red-500 p-3 rounded text-center text-sm mb-6">{error}</p>}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Iniciar Sesión
+          </h2>
+        </div>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="sr-only">
                 Correo electrónico
               </label>
               <input
-                type="email"
                 id="email"
                 name="email"
-                placeholder="tu@correo.com"
-                required
-                className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                type="email"
                 autoComplete="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Correo electrónico"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <div className="relative">
+              <label htmlFor="password" className="sr-only">
                 Contraseña
               </label>
               <input
-                type="password"
                 id="password"
                 name="password"
-                placeholder="••••••••"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 required
-                className="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
             </div>
+          </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Recordarme
-                </label>
+          {error && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                </div>
               </div>
-
-              <a href="/forgot-password" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
-                ¿Olvidaste tu contraseña?
-              </a>
             </div>
+          )}
 
+          <div>
             <button
               type="submit"
-              disabled={isLoading}
-              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                isLoading ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors`}
+              disabled={loading}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                loading
+                  ? 'bg-blue-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+              }`}
             >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              {loading ? (
+                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
-                  Iniciando sesión...
-                </>
-              ) : 'Iniciar Sesión'}
+                </span>
+              ) : null}
+              {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
             </button>
-          </form>
+          </div>
 
-          <p className="mt-6 text-center text-sm text-gray-600">
-            ¿No tienes cuenta?{" "}
-            <a href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Regístrate
+          <div className="text-sm text-center">
+            <a
+              href="/register"
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              ¿No tienes cuenta? Regístrate
             </a>
-          </p>
-        </div>
-
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-600">© {new Date().getFullYear()} E-Commerce. Todos los derechos reservados.</p>
-        </div>
+          </div>
+        </form>
       </div>
-    </main>
+    </div>
   );
 };
 

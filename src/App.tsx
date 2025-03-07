@@ -9,6 +9,10 @@ import ProductDetail from './components/ProductDetail.tsx';
 import ConfirmPayment from './components/ConfirmPayment.tsx';
 import ProductList from './components/ProductList.tsx';
 import Profile from './components/Profile.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import ProductManager from './components/ProductManager.tsx';
+import CategoryManager from './components/CategoryManager.tsx';
+
 import { useAppContext } from './components/AppContext.tsx';
 // Importamos los iconos de Lucide React
 import { ShoppingCart, Home, Package, Grid, Menu, X, User, LogOut } from 'lucide-react';
@@ -28,6 +32,7 @@ interface AppProps {
 export const App: React.FC<AppProps> = ({ page = 'home', data, id, tokenWs }) => {
   const [currentPage, setCurrentPage] = useState<ReactElement | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState("");
   const [cartCount, setCartCount] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -52,7 +57,36 @@ export const App: React.FC<AppProps> = ({ page = 'home', data, id, tokenWs }) =>
 
           const payload = JSON.parse(jsonPayload);
           setIsLoggedIn(true);
-          setUsername(payload.name || "Usuario");
+          setIsAdmin(payload.role === 'admin');
+          
+          // Si es la primera vez que se logea, redirigir según el rol
+          if (window.location.pathname === '/login') {
+            if (payload.role === 'admin') {
+              window.location.href = '/admin/dashboard';
+            } else {
+              window.location.href = '/';
+            }
+          }
+          
+          // Intentar obtener el username desde localStorage primero
+          try {
+            const userData = localStorage.getItem('user_data');
+            if (userData) {
+              const parsedUserData = JSON.parse(userData);
+              if (parsedUserData.username) {
+                setUsername(parsedUserData.username);
+              } else {
+                // Si no hay username en localStorage, usar el del token
+                setUsername(payload.name || "Usuario");
+              }
+            } else {
+              // Si no hay datos en localStorage, usar el del token
+              setUsername(payload.name || "Usuario");
+            }
+          } catch (localStorageError) {
+            console.error("Error al leer localStorage:", localStorageError);
+            setUsername(payload.name || "Usuario");
+          }
           
           // Obtener cantidad de productos en el carrito
           fetchCartCount(token);
@@ -191,6 +225,15 @@ export const App: React.FC<AppProps> = ({ page = 'home', data, id, tokenWs }) =>
       case 'categories':
         setCurrentPage(<CategoryList />);
         break;
+      case 'admin-dashboard':
+        setCurrentPage(<Dashboard />);
+        break;
+      case 'admin-products':
+        setCurrentPage(<ProductManager />);
+        break;
+        case 'admin-categories':
+          setCurrentPage(<CategoryManager/>);
+          break;
       case 'category':
         // Obtener el nombre de la categoría si está disponible
         let categoryName = "Categoría";

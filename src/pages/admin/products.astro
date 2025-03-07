@@ -1,0 +1,35 @@
+---
+import App from '../../App';
+import "../../styles/global.css";
+
+// Verificar si el usuario está autenticado y es admin
+const token = Astro.cookies.get('token')?.value;
+
+if (!token) {
+  return Astro.redirect('/login');
+}
+
+// Decodificar el token y verificar el rol
+try {
+  const [, payload] = token.split('.');
+  const decodedPayload = JSON.parse(atob(payload));
+  
+  if (decodedPayload.role !== 'admin') {
+    return Astro.redirect('/');
+  }
+} catch (error) {
+  return Astro.redirect('/login');
+}
+---
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Gestion de Productos</title>
+  </head>
+  <body>
+  <App page="admin-products" client:load />
+</body>
+</html>

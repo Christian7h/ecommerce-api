@@ -1,0 +1,33 @@
+---
+import App from '../../App';
+import '../../styles/global.css'
+// Verificar si el usuario está autenticado y es admin
+const token = Astro.cookies.get('token')?.value;
+
+if (!token) {
+  return Astro.redirect('/login');
+}
+
+// Decodificar el token y verificar el rol
+try {
+  const [, payload] = token.split('.');
+  const decodedPayload = JSON.parse(atob(payload));
+  
+  if (decodedPayload.role !== 'admin') {
+    return Astro.redirect('/');
+  }
+} catch (error) {
+  return Astro.redirect('/login');
+}
+---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración</title>
+</head>
+<body>
+  <App page="admin-dashboard" client:only="react"/>
+</body>
+</html>
