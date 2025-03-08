@@ -3,8 +3,54 @@ import Layout from "../layouts/Layout.astro";
 import Login from "../components/Login.tsx";
 
 export const prerender = false;
+let error = '';
 
+if (Astro.request.method === 'POST') {
+  try {
+    const data = await Astro.request.formData();
+    const email = data.get('email');
+    const password = data.get('password');
+
+    const response = await fetch(`${import.meta.env.AUTH_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      const result = await response.json();
+      error = result.message || 'Error al iniciar sesión';
+    } else {
+      const { token, role } = await response.json();
+      Astro.cookies.set('token', token, { path: '/', maxAge: 604800 }); // 7 días
+      Astro.cookies.set('role', role, { path: '/', maxAge: 604800 });
+      return role === 'admin' ? Astro.redirect('/admin') : Astro.redirect('/');
+    }
+  } catch (err) {
+    error = 'Error al conectar con el servidor';
+  }
+}
 ---
 <Layout title="Iniciar Sesion">
     <Login client:load/>
+    <h1>Iniciar Sesión</h1>
+  {error && <p style="color: red">{error}</p>}
+  <form method="POST">
+    <label>
+      Email:
+      <input type="email" name="email" required />
+    </label>
+    <label>
+      Contraseña:
+      <input type="password" name="password" required />
+    </label>
+    <button type="submit">Iniciar Sesión</button>
+  </form>
+  <a href="/register">Registrarse</a>
+
+  <div>
+    <a href="http://localhost:3000/api/auth/google">
+      <button>Iniciar sesión con Google</button>
+    </a>
+  </div>
 </Layout>

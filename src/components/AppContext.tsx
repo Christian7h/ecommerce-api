@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import Cookies from 'js-cookie';
 
 interface Product {
   _id: string;
@@ -24,6 +25,16 @@ interface CartItem {
 
 interface Cart {
   items: CartItem[];
+}
+
+interface UserProfile {
+  email: string;
+  username: string;
+  name: string;
+  phone: string;
+  address: string;
+  role: string;
+  picture?: string;
 }
 
 interface AppContextType {
@@ -59,6 +70,9 @@ interface AppContextType {
   user: any;
   fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
   verifyToken: () => Promise<boolean>;
+  userProfile: UserProfile | null;
+  fetchUserProfile: () => Promise<UserProfile | null>;
+  updateUserProfile: (profileData: Partial<UserProfile>) => Promise<UserProfile | null>;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -104,6 +118,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     hasNextPage: false,
     hasPrevPage: false
   });
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const getToken = () => {
     return document.cookie
@@ -609,6 +624,109 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     initializeApp();
   }, []);
 
+  // Función para obtener el perfil del usuario
+  const fetchUserProfile = async (): Promise<UserProfile | null> => {
+    try {
+      const token = Cookies.get('token');
+      if (!token) return null;
+
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/auth/me`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token inválido o expirado, limpiar cookies
+          Cookies.remove('token');
+          Cookies.remove('role');
+          localStorage.removeItem('user_data');
+          return null;
+        }
+        throw new Error('Error al obtener el perfil');
+      }
+
+      const profileData = await response.json();
+      setUserProfile(profileData);
+      
+      // Actualizar datos en localStorage
+      const userData = localStorage.getItem('user_data');
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        localStorage.setItem('user_data', JSON.stringify({
+          ...parsedData,
+          ...profileData
+        }));
+      } else {
+        localStorage.setItem('user_data', JSON.stringify(profileData));
+      }
+      
+      return profileData;
+    } catch (error) {
+      console.error('Error al obtener el perfil:', error);
+      return null;
+    }
+  };
+
+  // Función para actualizar el perfil del usuario
+  const updateUserProfile = async (profileData: Partial<UserProfile>): Promise<UserProfile | null> => {
+    try {
+      const token = Cookies.get('token');
+      if (!token) return null;
+
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/auth/me`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(profileData)
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token inválido o expirado, limpiar cookies
+          Cookies.remove('token');
+          Cookies.remove('role');
+          localStorage.removeItem('user_data');
+          return null;
+        }
+        throw new Error('Error al actualizar el perfil');
+      }
+
+      const updatedProfile = await response.json();
+      setUserProfile(updatedProfile);
+      
+      // Actualizar datos en localStorage
+      const userData = localStorage.getItem('user_data');
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        localStorage.setItem('user_data', JSON.stringify({
+          ...parsedData,
+          ...updatedProfile
+        }));
+      } else {
+        localStorage.setItem('user_data', JSON.stringify(updatedProfile));
+      }
+      
+      return updatedProfile;
+    } catch (error) {
+      console.error('Error al actualizar el perfil:', error);
+      return null;
+    }
+  };
+
+  // Cargar el perfil al iniciar la aplicación
+  useEffect(() => {
+    const token = Cookies.get('token');
+    if (token) {
+      fetchUserProfile();
+    }
+  }, []);
+
   const contextValue: AppContextType = {
     products,
     categories,
@@ -630,7 +748,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     isAuthenticated,
     user,
     fetchWithAuth,
-    verifyToken
+    verifyToken,
+    userProfile,
+    fetchUserProfile,
+    updateUserProfile
   };
 
   return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;

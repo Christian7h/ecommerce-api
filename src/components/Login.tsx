@@ -16,6 +16,10 @@ const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  const handleGoogleLogin = () => {
+    window.location.href = `${import.meta.env.PUBLIC_API_URL}/auth/google`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -205,25 +209,28 @@ const Login: React.FC = () => {
             <div className="mt-6 grid grid-cols-2 gap-3">
               <button
                 type="button"
-                className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200"
+                onClick={handleGoogleLogin}
+                className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200 transform hover:scale-[1.02] relative overflow-hidden group"
               >
                 <img
                   className="h-5 w-5 mr-2"
                   src="https://www.svgrepo.com/show/475656/google-color.svg"
                   alt="Google"
                 />
-                Google
+                <span className="relative z-10">Google</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-red-500 opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
               </button>
               <button
                 type="button"
-                className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200"
+                className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200 transform hover:scale-[1.02] relative overflow-hidden group"
               >
                 <img
                   className="h-5 w-5 mr-2"
                   src="https://www.svgrepo.com/show/448234/facebook.svg"
                   alt="Facebook"
                 />
-                Facebook
+                <span className="relative z-10">Facebook</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-800 opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
               </button>
             </div>
           </div>
