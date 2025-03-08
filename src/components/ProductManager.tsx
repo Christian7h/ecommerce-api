@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import { useAppContext } from './AppContext';
 
 interface Category {
   _id: string;
@@ -33,6 +34,8 @@ const ProductManager: React.FC = () => {
     category: '',
     image: null as File | null,
   });
+
+  const { verifyToken } = useAppContext();
 
   // Cargar productos y categorías
   useEffect(() => {
@@ -134,21 +137,25 @@ const ProductManager: React.FC = () => {
     e.preventDefault();
     setError('');
     
-    // Validar campos requeridos
-    if (!formData.name.trim()) {
-      setError('El nombre es obligatorio');
-      return;
-    }
-    if (!formData.price || Number(formData.price) <= 0) {
-      setError('El precio debe ser mayor que 0');
-      return;
-    }
-    if (!formData.category) {
-      setError('La categoría es obligatoria');
-      return;
-    }
-
     try {
+      // Verificar token antes de continuar
+      const isValid = await verifyToken();
+      if (!isValid) return;
+
+      // Validar campos requeridos
+      if (!formData.name.trim()) {
+        setError('El nombre es obligatorio');
+        return;
+      }
+      if (!formData.price || Number(formData.price) <= 0) {
+        setError('El precio debe ser mayor que 0');
+        return;
+      }
+      if (!formData.category) {
+        setError('La categoría es obligatoria');
+        return;
+      }
+
       const token = document.cookie
         .split("; ")
         .find((row) => row.startsWith("token="))
@@ -247,6 +254,10 @@ const ProductManager: React.FC = () => {
     }
 
     try {
+      // Verificar token antes de continuar
+      const isValid = await verifyToken();
+      if (!isValid) return;
+
       const token = document.cookie
         .split("; ")
         .find((row) => row.startsWith("token="))

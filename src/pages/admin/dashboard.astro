@@ -1,6 +1,7 @@
 ---
+import AuthLayout from '../../layouts/AuthLayout.astro';
 import App from '../../App';
-import '../../styles/global.css'
+import '../../styles/global.css';
 // Verificar si el usuario está autenticado y es admin
 const token = Astro.cookies.get('token')?.value;
 
@@ -20,14 +21,11 @@ try {
   return Astro.redirect('/login');
 }
 ---
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración</title>
-</head>
-<body>
-  <App page="admin-dashboard" client:only="react"/>
-</body>
-</html>
+
+<AuthLayout
+  requireAuth={true}
+  requireAdmin={true}
+  title="Panel de Administración"
+>
+  <App page="admin-dashboard" client:only="react" />
+</AuthLayout>

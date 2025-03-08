@@ -57,9 +57,11 @@ interface AppContextType {
   logout: () => void;
   isAuthenticated: boolean;
   user: any;
+  fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
+  verifyToken: () => Promise<boolean>;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+export const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const useAppContext = () => {
   const context = useContext(AppContext);
@@ -69,11 +71,20 @@ export const useAppContext = () => {
   return context;
 };
 
-interface AppProviderProps {
-  children: ReactNode;
-}
+export const handleAuthError = (error: any) => {
+  if (error?.status === 401 || error?.message?.includes('401')) {
+    // Limpiar cookies y localStorage
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    localStorage.clear();
+    
+    // Redirigir a login
+    window.location.href = '/login';
+    return true;
+  }
+  return false;
+};
 
-export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [cart, setCart] = useState<any>({ items: [] });
@@ -101,31 +112,57 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       ?.split("=")[1];
   };
 
-  const fetchProducts = async (page = 1, limit = 10, category?: string) => {
-    const token = getToken();
-    if (!token) return;
-
-    setLoading(prev => ({ ...prev, products: true }));
+  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
     try {
-      // Construir la URL con parámetros de paginación y categoría
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+
+      if (!token) {
+        throw new Error('401: No token found');
+      }
+
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('401: Token expired');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response;
+    } catch (error) {
+      if (handleAuthError(error)) {
+        throw error;
+      }
+      console.error('Error en fetchWithAuth:', error);
+      throw error;
+    }
+  };
+
+  const fetchProducts = async (page = 1, limit = 10, category?: string) => {
+    try {
       let url = `${import.meta.env.PUBLIC_API_URL}/products?page=${page}&limit=${limit}`;
       if (category) {
         url += `&category=${category}`;
       }
-
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
       
-      if (!response.ok) throw new Error("Error al obtener productos");
-      
+      const response = await fetchWithAuth(url);
       const data = await response.json();
       setProducts(data.products);
       setPagination(data.pagination);
     } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(prev => ({ ...prev, products: false }));
+      if (!handleAuthError(error)) {
+        console.error('Error al obtener productos:', error);
+      }
     }
   };
 
@@ -523,47 +560,53 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  // Cargar datos desde localStorage al inicio
+  // Función para verificar el token
+  const verifyToken = async () => {
+    try {
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("token="))
+        ?.split("=")[1];
+
+      if (!token) {
+        throw new Error('No token found');
+      }
+
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/auth/verify`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        throw new Error('Token invalid');
+      }
+
+      const data = await response.json();
+      setIsAuthenticated(true);
+      setUser(data);
+      return true;
+    } catch (error) {
+      console.error('Error verificando token:', error);
+      // Limpiar datos de autenticación
+      document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      localStorage.clear();
+      window.location.href = '/login';
+      return false;
+    }
+  };
+
+  // Verificar token antes de cargar datos
   useEffect(() => {
-    const loadCachedData = () => {
-      try {
-        // Cargar carrito desde caché
-        const cachedCart = localStorage.getItem('cart');
-        if (cachedCart) {
-          const { data, timestamp } = JSON.parse(cachedCart);
-          // Verificar si los datos tienen menos de 30 segundos
-          if (Date.now() - timestamp < 30 * 1000) {
-            setCart(data);
-          }
-        }
-
-        // Verificar si hay un token en las cookies
-        const token = document.cookie
-          .split("; ")
-          .find((row: string) => row.startsWith("token="))
-          ?.split("=")[1];
-
-        if (token) {
-          // Cargar total del carrito
-          fetch(`${import.meta.env.PUBLIC_API_URL}/cart/total`, {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-            .then(response => response.json())
-            .then(data => setCartTotal(data))
-            .catch(error => console.error(error));
-        }
-      } catch (error) {
-        console.error("Error al cargar datos desde caché:", error);
+    const initializeApp = async () => {
+      const isValid = await verifyToken();
+      if (isValid) {
+        fetchProducts();
+        fetchCategories();
+        fetchCart();
+        fetchCartTotal();
       }
     };
 
-    loadCachedData();
-    
-    // Cargar datos frescos
-    fetchProducts();
-    fetchCategories();
-    fetchCart();
-    fetchCartTotal();
+    initializeApp();
   }, []);
 
   const contextValue: AppContextType = {
@@ -585,7 +628,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     register,
     logout,
     isAuthenticated,
-    user
+    user,
+    fetchWithAuth,
+    verifyToken
   };
 
   return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;

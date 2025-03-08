@@ -1,6 +1,7 @@
 ---
+import AuthLayout from '../../layouts/AuthLayout.astro';
 import App from '../../App';
-import "../../styles/global.css";
+import '../../styles/global.css';
 
 // Verificar si el usuario está autenticado y es admin
 const token = Astro.cookies.get('token')?.value;
@@ -21,15 +22,11 @@ try {
   return Astro.redirect('/login');
 }
 ---
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Gestion de Productos</title>
-  </head>
-  <body>
-  <App page="admin-products" client:load />
-</body>
-</html>
+
+<AuthLayout
+  requireAuth={true}
+  requireAdmin={true}
+  title="Gestión de Productos"
+>
+  <App page="admin-products" client:only="react" />
+</AuthLayout>
