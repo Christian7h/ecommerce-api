@@ -1,19 +1,42 @@
-import { useState } from "react";
+import React, { useState } from 'react';
+import { Eye, EyeOff, Mail, Lock, User, Phone, UserPlus } from 'lucide-react';
 import Cookies from "js-cookie"; // Importamos js-cookie
 
-const Register = () => {
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+const Register: React.FC = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const validateForm = () => {
+    // ... existing validation logic ...
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const name = formData.get("name") as string;
 
-    setError(null); // Reiniciar error antes de la petición
-    setIsLoading(true);
+    setError(''); // Reiniciar error antes de la petición
+    setLoading(true);
 
     try {
       const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/auth/register`, {
@@ -31,7 +54,7 @@ const Register = () => {
         } else {
           setError("Error inesperado. El servidor no devolvió un JSON válido.");
         }
-        setIsLoading(false);
+        setLoading(false);
         return;
       }
 
@@ -144,12 +167,12 @@ const Register = () => {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={loading}
               className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                isLoading ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
+                loading ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'
               } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors`}
             >
-              {isLoading ? (
+              {loading ? (
                 <>
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
