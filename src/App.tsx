@@ -294,21 +294,21 @@ export const App: React.FC<AppProps> = ({ page = 'home', data, id, tokenWs }) =>
               <div className="hidden md:flex space-x-4 items-center">
                 <a href="/" className="text-gray-600 hover:text-blue-600 flex items-center">
                   <Home size={18} className="mr-1" />
-                  <span>Inicio</span>
+                  {/* <span>Inicio</span> */}
                 </a>
                 <a href="/categorias" className="text-gray-600 hover:text-blue-600 flex items-center">
                   <Grid size={18} className="mr-1" />
-                  <span>Categorías</span>
+                  {/* <span>Categorías</span> */}
                 </a>
                 <a href="/pedidos" className="text-gray-600 hover:text-blue-600 flex items-center">
                   <Package size={18} className="mr-1" />
-                  <span>Mis Pedidos</span>
+                  {/* <span>Mis Pedidos</span> */}
                 </a>
                 <a href="/carrito" className="text-gray-600 hover:text-blue-600 flex items-center relative">
                   <ShoppingCart size={20} className="mr-1" />
-                  <span>Carrito</span>
+                  {/* <span>Carrito</span> */}
                   {cartCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
                       {cartCount > 99 ? '99+' : cartCount}
                     </span>
                   )}

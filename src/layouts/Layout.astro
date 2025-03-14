@@ -15,17 +15,7 @@ import { ClientRouter } from "astro:transitions";
     <ClientRouter />
   </head>
   <body class="bg-gray-50 text-gray-900">
-    <header class="sticky top-0 bg-white shadow-md">
-      <nav class="container mx-auto flex justify-between p-4">
-        <ul class="flex space-x-4">
-          <li><a href="/" class="hover:text-blue-600">Inicio</a></li>
-          <li><a href="/carrito" class="hover:text-blue-600">Carrito</a></li>
-          <li><a href="/pedidos" class="hover:text-blue-600">Mis Órdenes</a></li>
-          <li><a href="/categorias" class="hover:text-blue-600">Categorías</a></li>
-        </ul>
-      </nav>
-    </header>
-
+    
     <main class="container mx-auto p-6">
       <slot />
     </main>
@@ -33,5 +23,6 @@ import { ClientRouter } from "astro:transitions";
     <footer class="bg-gray-200 text-center p-4 mt-6">
       <p>&copy; 2025 Tienda Online</p>
     </footer>
+    
   </body>
 </html>

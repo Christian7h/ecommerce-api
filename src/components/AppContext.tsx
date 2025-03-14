@@ -174,6 +174,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const data = await response.json();
       setProducts(data.products);
       setPagination(data.pagination);
+      console.log(data);
     } catch (error) {
       if (!handleAuthError(error)) {
         console.error('Error al obtener productos:', error);

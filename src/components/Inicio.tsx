@@ -359,9 +359,9 @@ const Inicio: React.FC = () => {
         </div>
 
         {/* Información del carrito */}
-        <div className="w-full md:w-1/4">
+        <div className="">
           <div className="bg-gray-100 p-4 rounded-lg shadow">
-            <p className="text-lg font-semibold">Productos en carrito: 
+            <p className="text-lg font-semibold">P en carrito: 
               <span className="ml-2 text-blue-600">{cartTotal}</span>
             </p>
           </div>

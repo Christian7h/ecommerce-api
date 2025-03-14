@@ -74,7 +74,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
         await fetchCart();
         await fetchCartTotal();
         
-        // Actualizar localStorage con los datos del carrito
+        // Actualizar localStorage con los datos del carrito y bloqueo temporal del stock
         try {
           const cartDataResponse = await fetch(`${import.meta.env.PUBLIC_API_URL}/cart`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -83,6 +83,24 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
             const cartData = await cartDataResponse.json();
             localStorage.setItem('cart', JSON.stringify(cartData));
             localStorage.setItem('cartTimestamp', new Date().toISOString());
+            
+            // Guardar bloqueo temporal del stock por 30 minutos
+            const reservedStock = JSON.parse(localStorage.getItem('reservedStock') || '{}');
+            reservedStock[productId] = {
+              quantity,
+              expiresAt: new Date(Date.now() + 30 * 60000).toISOString() // 30 minutos
+            };
+            localStorage.setItem('reservedStock', JSON.stringify(reservedStock));
+            
+            // Establecer un temporizador para liberar el stock después de 30 minutos
+            setTimeout(() => {
+              const currentReservedStock = JSON.parse(localStorage.getItem('reservedStock') || '{}');
+              if (currentReservedStock[productId]) {
+                delete currentReservedStock[productId];
+                localStorage.setItem('reservedStock', JSON.stringify(currentReservedStock));
+                console.log(`Stock liberado para el producto ${productId}`);
+              }
+            }, 30 * 60000); // 30 minutos
           }
         } catch (error) {
           console.error("Error al obtener datos del carrito:", error);
@@ -160,9 +178,9 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
           <div className="w-full md:w-1/2">
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="relative h-96 group">
-                {product.image ? (
+                {product.imageUrl ? (
                   <img 
-                    src={product.image} 
+                    src={product.imageUrl} 
                     alt={product.name} 
                     className="w-full h-full object-contain rounded-lg transition-transform duration-300 group-hover:scale-105"
                   />
@@ -198,7 +216,7 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                   {product.stock > 0 ? (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                       <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                      En Stock
+                      En Stock {product.stock}
                     </span>
                   ) : (
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
@@ -206,6 +224,20 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                       Agotado
                     </span>
                   )}
+                </div>
+                
+                {/* Mensaje sobre el estado del stock */}
+                <div className="mt-2 text-sm">
+                  {product.stock > 10 ? (
+                    <p className="text-green-600">¡Producto disponible! Tenemos suficientes unidades.</p>
+                  ) : product.stock > 0 ? (
+                    <p className="text-amber-600">¡Últimas unidades disponibles! El stock es limitado.</p>
+                  ) : (
+                    <p className="text-red-600">Producto temporalmente sin stock. Pronto disponible nuevamente.</p>
+                  )}
+                  <p className="text-gray-500 mt-1 text-xs">
+                    Los productos añadidos al carrito reservan stock por 30 minutos.
+                  </p>
                 </div>
               </div>
 
@@ -254,9 +286,10 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
               {/* Botón de añadir al carrito */}
               <button
                 onClick={handleAddToCart}
-                disabled={addingToCart}
+                disabled={addingToCart || product.stock <= 0}
                 className={`w-full py-4 px-6 rounded-xl font-semibold text-white text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] ${
                   addingToCart ? 'bg-gray-400 cursor-not-allowed' : 
+                  product.stock <= 0 ? 'bg-gray-400 cursor-not-allowed' :
                   addedToCart ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
                 } shadow-lg hover:shadow-xl`}
               >
@@ -267,6 +300,13 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     Añadiendo al Carrito...
+                  </>
+                ) : product.stock <= 0 ? (
+                  <>
+                    <svg className="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Sin Stock Disponible
                   </>
                 ) : addedToCart ? (
                   <>
@@ -314,4 +354,4 @@ const ProductDetail: React.FC<ProductDetailProps> = ({ productId }) => {
   );
 };
 
-export default ProductDetail; 
+export default ProductDetail;

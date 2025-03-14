@@ -33,24 +33,4 @@ if (Astro.request.method === 'POST') {
 ---
 <Layout title="Iniciar Sesion">
     <Login client:load/>
-    <h1>Iniciar Sesión</h1>
-  {error && <p style="color: red">{error}</p>}
-  <form method="POST">
-    <label>
-      Email:
-      <input type="email" name="email" required />
-    </label>
-    <label>
-      Contraseña:
-      <input type="password" name="password" required />
-    </label>
-    <button type="submit">Iniciar Sesión</button>
-  </form>
-  <a href="/register">Registrarse</a>
-
-  <div>
-    <a href="http://localhost:3000/api/auth/google">
-      <button>Iniciar sesión con Google</button>
-    </a>
-  </div>
 </Layout>
