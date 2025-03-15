@@ -32,21 +32,6 @@ const ConfirmPayment: React.FC<ConfirmPaymentProps> = ({
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Función para limpiar el carrito local
-  const clearLocalCart = () => {
-    try {
-      // Limpiar el carrito en localStorage
-      localStorage.removeItem('cart');
-      localStorage.removeItem('cartTimestamp');
-      
-      // Disparar evento para actualizar contador del carrito en toda la aplicación
-      const event = new CustomEvent('cartUpdated', { detail: { total: 0 } });
-      window.dispatchEvent(event);
-    } catch (error) {
-      console.error("Error al limpiar el carrito local:", error);
-    }
-  };
-
   useEffect(() => {
     const confirmPayment = async () => {
       // Confirmar pago de WebPay
@@ -73,11 +58,6 @@ const ConfirmPayment: React.FC<ConfirmPaymentProps> = ({
           });
           const data = await response.json();
           setResult(data);
-          
-          // Si el pago fue exitoso, limpiar el carrito local
-          if (data.status === "AUTHORIZED") {
-            clearLocalCart();
-          }
         } catch (error) {
           console.error("Error al confirmar el pago:", error);
         } finally {
@@ -91,66 +71,32 @@ const ConfirmPayment: React.FC<ConfirmPaymentProps> = ({
             .split("; ")
             .find((row) => row.startsWith("token="))
             ?.split("=")[1];
-      
+
           if (!token) {
-            console.error("No se encontró token de autenticación");
-            setResult({
-              status: 'FAILED',
-              orderId: 'N/A',
-              amount: 0,
-              message: 'Error de autenticación. Por favor inicia sesión nuevamente.'
-            });
-            setTimeout(() => {
-              window.location.href = "/login";
-            }, 3000); // Dar tiempo para mostrar el mensaje antes de redirigir
+            window.location.href = "/login";
             return;
           }
-      
+
           setLoading(true);
-          // Incluir todos los parámetros disponibles, incluido merchant_order_id si existe
-          const merchant_order_id = new URLSearchParams(window.location.search).get('merchant_order_id');
-          
           const response = await fetch(
-            `${import.meta.env.PUBLIC_API_URL}/orders/mercadopago/confirm?payment_id=${payment_id}&status=${status}&preference_id=${preference_id}${merchant_order_id ? `&merchant_order_id=${merchant_order_id}` : ''}`, 
+            `${import.meta.env.PUBLIC_API_URL}/orders/mercadopago/confirm?payment_id=${payment_id}&status=${status}&preference_id=${preference_id}`, 
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
             }
           );
-          
-          if (!response.ok) {
-            // Manejar errores HTTP
-            const errorText = await response.text();
-            throw new Error(`Error HTTP ${response.status}: ${errorText}`);
-          }
-          
           const data = await response.json();
           
-          // Determinar si el pago fue exitoso
-          const isPaymentSuccessful = data.success === true || data.status === 'approved' || status === 'approved';
-          
-          // Más datos relevantes para el usuario
+          // Adaptar la respuesta de Mercado Pago al formato esperado
           setResult({
-            status: isPaymentSuccessful ? 'AUTHORIZED' : 'FAILED',
-            orderId: data.order || data.payment?.id || 'N/A', // Incluir el ID de la orden si está disponible
+            status: data.success ? 'AUTHORIZED' : 'FAILED',
+            orderId: data.payment?.id || 'N/A',
             amount: data.payment?.amount || 0,
-            message: data.message || (isPaymentSuccessful ? 'Pago exitoso' : 'Pago fallido')
+            message: data.message || (data.success ? 'Pago exitoso' : 'Pago fallido')
           });
-          
-          // Si el pago fue exitoso, limpiar el carrito local
-          if (isPaymentSuccessful) {
-            clearLocalCart();
-          }
-          
         } catch (error) {
           console.error("Error al confirmar el pago con Mercado Pago:", error);
-          setResult({
-            status: 'FAILED',
-            orderId: 'N/A',
-            amount: 0,
-            message: `Error: ${error.message || 'Ocurrió un problema al procesar el pago'}`
-          });
         } finally {
           setLoading(false);
         }
