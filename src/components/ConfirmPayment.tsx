@@ -6,19 +6,36 @@ interface Result {
   orderId: string;
   amount: number;
   message: string;
+  success?: boolean;
+  payment?: {
+    id: string;
+    status: string;
+    amount: number;
+  }
 }
 
 interface ConfirmPaymentProps {
   tokenWs: string | null;
+  payment_id?: string | null;
+  status?: string | null;
+  preference_id?: string | null;
+  paymentType?: 'webpay' | 'mercadopago';
 }
 
-const ConfirmPayment: React.FC<ConfirmPaymentProps> = ({ tokenWs }) => {
+const ConfirmPayment: React.FC<ConfirmPaymentProps> = ({ 
+  tokenWs, 
+  payment_id, 
+  status, 
+  preference_id, 
+  paymentType = 'webpay' 
+}) => {
   const [result, setResult] = useState<Result | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const confirmPayment = async () => {
-      if (tokenWs) {
+      // Confirmar pago de WebPay
+      if (paymentType === 'webpay' && tokenWs) {
         try {
           const token = document.cookie
             .split("; ")
@@ -46,13 +63,50 @@ const ConfirmPayment: React.FC<ConfirmPaymentProps> = ({ tokenWs }) => {
         } finally {
           setLoading(false);
         }
+      } 
+      // Confirmar pago de Mercado Pago
+      else if (paymentType === 'mercadopago' && payment_id) {
+        try {
+          const token = document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("token="))
+            ?.split("=")[1];
+
+          if (!token) {
+            window.location.href = "/login";
+            return;
+          }
+
+          setLoading(true);
+          const response = await fetch(
+            `${import.meta.env.PUBLIC_API_URL}/orders/mercadopago/confirm?payment_id=${payment_id}&status=${status}&preference_id=${preference_id}`, 
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const data = await response.json();
+          
+          // Adaptar la respuesta de Mercado Pago al formato esperado
+          setResult({
+            status: data.success ? 'AUTHORIZED' : 'FAILED',
+            orderId: data.payment?.id || 'N/A',
+            amount: data.payment?.amount || 0,
+            message: data.message || (data.success ? 'Pago exitoso' : 'Pago fallido')
+          });
+        } catch (error) {
+          console.error("Error al confirmar el pago con Mercado Pago:", error);
+        } finally {
+          setLoading(false);
+        }
       } else {
         setLoading(false);
       }
     };
 
     confirmPayment();
-  }, [tokenWs]);
+  }, [tokenWs, payment_id, status, preference_id, paymentType]);
 
   return (
     <div className="container mx-auto p-6">
@@ -89,7 +143,7 @@ const ConfirmPayment: React.FC<ConfirmPaymentProps> = ({ tokenWs }) => {
         </div>
       ) : (
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <p className="text-center text-gray-600">No se ha proporcionado un token de pago válido.</p>
+          <p className="text-center text-gray-600">No se ha proporcionado información de pago válida.</p>
           <div className="mt-6 text-center">
             <a href="/" className="text-blue-600 hover:underline">Volver a la tienda</a>
           </div>

@@ -8,6 +8,7 @@ interface CartProps {
 const Cart: React.FC<CartProps> = ({ data }) => {
   const { cart, loading, removeFromCart, fetchCart } = useAppContext();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isCheckingOutMP, setIsCheckingOutMP] = useState(false);
   const [localCart, setLocalCart] = useState<any>(null);
 
   useEffect(() => {
@@ -72,6 +73,32 @@ const Cart: React.FC<CartProps> = ({ data }) => {
     }
   };
 
+  const handleCheckoutMercadoPago = async () => {
+    setIsCheckingOutMP(true);
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
+
+    try {
+      const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/orders/mercadopago/initiate`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        window.location.href = data.init_point; // Redirige a Mercado Pago
+      } else {
+        alert("Error al iniciar el pago con Mercado Pago");
+        setIsCheckingOutMP(false);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setIsCheckingOutMP(false);
+    }
+  };
+
   const handleRemoveItem = (productId: string) => {
     removeFromCart(productId);
   };
@@ -132,23 +159,54 @@ const Cart: React.FC<CartProps> = ({ data }) => {
                 <span className="text-xl font-bold text-blue-600">${calculateTotal()}</span>
               </div>
               
-              <button 
-                onClick={handleCheckout}
-                disabled={isCheckingOut || loading.cart}
-                className={`w-full ${
-                  isCheckingOut ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'
-                } text-white font-semibold py-2 rounded-lg transition-all flex justify-center items-center`}
-              >
-                {isCheckingOut ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Procesando...
-                  </>
-                ) : 'Realizar Orden'}
-              </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button 
+                  onClick={handleCheckout}
+                  disabled={isCheckingOut || loading.cart}
+                  className={`w-full ${
+                    isCheckingOut ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'
+                  } text-white font-semibold py-2 rounded-lg transition-all flex justify-center items-center`}
+                >
+                  {isCheckingOut ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <img src="/webpay-logo.svg" alt="WebPay" className="h-4 mr-2" />
+                      Pagar con WebPay
+                    </>
+                  )}
+                </button>
+                <button 
+                  onClick={handleCheckoutMercadoPago}
+                  disabled={isCheckingOutMP || loading.cart}
+                  className={`w-full ${
+                    isCheckingOutMP ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
+                  } text-white font-semibold py-2 rounded-lg transition-all flex justify-center items-center`}
+                >
+                  {isCheckingOutMP ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-4 mr-2" viewBox="0 0 24 24" fill="#ffffff">
+                        <path d="M18.6,0H5.4C2.4,0,0,2.4,0,5.4v13.2C0,21.6,2.4,24,5.4,24h13.2c3,0,5.4-2.4,5.4-5.4V5.4C24,2.4,21.6,0,18.6,0z M6.7,18.2c-1.5,0-2.6-1.2-2.6-2.6c0-1.5,1.2-2.6,2.6-2.6c1.5,0,2.6,1.2,2.6,2.6C9.3,17,8.1,18.2,6.7,18.2z M12,18.2 c-1.5,0-2.6-1.2-2.6-2.6c0-1.5,1.2-2.6,2.6-2.6c1.5,0,2.6,1.2,2.6,2.6C14.6,17,13.5,18.2,12,18.2z M17.3,18.2c-1.5,0-2.6-1.2-2.6-2.6c0-1.5,1.2-2.6,2.6-2.6s2.6,1.2,2.6,2.6C20,17,18.8,18.2,17.3,18.2z" />
+                      </svg>
+                      Pagar con Mercado Pago
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
           
@@ -167,4 +225,3 @@ const Cart: React.FC<CartProps> = ({ data }) => {
 };
 
 export default Cart;
-  

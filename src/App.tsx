@@ -27,9 +27,22 @@ interface AppProps {
   data?: any;
   id?: string;
   tokenWs?: string | null;
+  payment_id?: string | null;
+  status?: string | null;
+  preference_id?: string | null;
+  paymentType?: 'webpay' | 'mercadopago';
 }
 
-export const App: React.FC<AppProps> = ({ page = 'home', data, id, tokenWs }) => {
+export const App: React.FC<AppProps> = ({ 
+  page = 'home', 
+  data, 
+  id, 
+  tokenWs,
+  payment_id,
+  status,
+  preference_id,
+  paymentType = 'webpay'
+}) => {
   const [currentPage, setCurrentPage] = useState<ReactElement | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -231,9 +244,9 @@ export const App: React.FC<AppProps> = ({ page = 'home', data, id, tokenWs }) =>
       case 'admin-products':
         setCurrentPage(<ProductManager />);
         break;
-        case 'admin-categories':
-          setCurrentPage(<CategoryManager/>);
-          break;
+      case 'admin-categories':
+        setCurrentPage(<CategoryManager/>);
+        break;
       case 'category':
         // Obtener el nombre de la categoría si está disponible
         let categoryName = "Categoría";
@@ -260,7 +273,17 @@ export const App: React.FC<AppProps> = ({ page = 'home', data, id, tokenWs }) =>
         setCurrentPage(<Orders orders={data} />);
         break;
       case 'confirm-payment':
-        setCurrentPage(<ConfirmPayment tokenWs={tokenWs || null} />);
+        if (paymentType === 'mercadopago') {
+          setCurrentPage(<ConfirmPayment 
+            tokenWs={null} 
+            payment_id={payment_id} 
+            status={status} 
+            preference_id={preference_id} 
+            paymentType="mercadopago" 
+          />);
+        } else {
+          setCurrentPage(<ConfirmPayment tokenWs={tokenWs || null} paymentType="webpay" />);
+        }
         break;
       case 'profile':
         setCurrentPage(<Profile />);
@@ -268,7 +291,7 @@ export const App: React.FC<AppProps> = ({ page = 'home', data, id, tokenWs }) =>
       default:
         setCurrentPage(<Inicio />);
     }
-  }, [page, data, id, tokenWs, categories]);
+  }, [page, data, id, tokenWs, payment_id, status, preference_id, paymentType, categories]);
 
   return (
     <AppProvider>
@@ -444,4 +467,4 @@ export const App: React.FC<AppProps> = ({ page = 'home', data, id, tokenWs }) =>
   );
 };
 
-export default App; 
+export default App;

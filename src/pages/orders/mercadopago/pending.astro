@@ -1,0 +1,33 @@
+---
+import "../../../styles/global.css";
+import { App } from "../../../App";
+
+// Obtener el token desde las cookies
+const token = Astro.cookies.get("token")?.value;
+if (!token) return Astro.redirect("/login");
+
+// Recuperar los parámetros de la URL
+const payment_id = Astro.url.searchParams.get('payment_id');
+const status = Astro.url.searchParams.get('status');
+const preference_id = Astro.url.searchParams.get('preference_id');
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Pago Pendiente - E-Commerce</title>
+  </head>
+  <body>
+    <App 
+      page="confirm-payment"
+      payment_id={payment_id}
+      status={status}
+      preference_id={preference_id}
+      paymentType="mercadopago"
+      client:only="react"
+    />
+  </body>
+</html>
